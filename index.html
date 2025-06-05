@@ -70,6 +70,58 @@
             background: linear-gradient(145deg, #f1f5f9 0%, #e2e8f0 100%);
         }
 
+        .instructions-section {
+            background: linear-gradient(145deg, #ffffff 0%, #f7fafc 100%);
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 35px;
+            box-shadow: 
+                0 8px 20px rgba(0, 0, 0, 0.08),
+                0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+            text-align: center;
+            border: 2px solid rgba(74, 85, 104, 0.1);
+        }
+
+        .greeting {
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .instructions-text {
+            font-size: 1.3rem;
+            color: #2d3748;
+            font-weight: 500;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .requirements {
+            font-size: 1.1rem;
+            color: #4a5568;
+            font-weight: 400;
+            padding: 15px;
+            background: linear-gradient(145deg, #f1f5f9 0%, #e2e8f0 100%);
+            border-radius: 10px;
+            border-left: 4px solid #4a5568;
+        }
+
+        .required-text {
+            color: #e53e3e;
+            font-weight: 700;
+        }
+
+        .optional-text {
+            color: #38a169;
+            font-weight: 700;
+        }
+
         .image-section {
             text-align: center;
             margin-bottom: 35px;
@@ -117,6 +169,7 @@
         input[type="text"],
         input[type="number"],
         input[type="date"],
+        input[type="file"],
         textarea {
             width: 100%;
             padding: 15px 20px;
@@ -127,6 +180,12 @@
             background: linear-gradient(145deg, #ffffff 0%, #f7fafc 100%);
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02) inset;
             color: #2d3748;
+        }
+
+        input[type="file"] {
+            padding: 10px;
+            border: 2px dashed #cbd5e0;
+            background: linear-gradient(145deg, #ffffff 0%, #f7fafc 100%);
         }
 
         input:focus,
@@ -149,6 +208,45 @@
             resize: vertical;
             min-height: 100px;
             font-family: inherit;
+        }
+
+        .photo-preview {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f7fafc;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .photo-list {
+            margin-top: 10px;
+        }
+
+        .photo-item {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+            padding: 8px;
+            background: white;
+            border-radius: 5px;
+        }
+
+        .photo-item img {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+
+        .photo-info {
+            flex: 1;
+            font-size: 0.9rem;
+        }
+
+        .photo-size {
+            font-size: 0.8rem;
+            color: #718096;
         }
 
         .submit-section {
@@ -233,6 +331,12 @@
             display: none;
         }
 
+        .file-info {
+            font-size: 0.85rem;
+            color: #718096;
+            margin-top: 5px;
+        }
+
         @media (max-width: 768px) {
             .parts-image {
                 width: 240px;
@@ -271,6 +375,8 @@
         .form-group:nth-child(4) { animation-delay: 0.4s; }
         .form-group:nth-child(5) { animation-delay: 0.5s; }
         .form-group:nth-child(6) { animation-delay: 0.6s; }
+        .form-group:nth-child(7) { animation-delay: 0.7s; }
+        .form-group:nth-child(8) { animation-delay: 0.8s; }
     </style>
 </head>
 <body>
@@ -281,6 +387,16 @@
         </div>
 
         <div class="form-container">
+            <div class="instructions-section">
+                <div class="greeting">HELLO ENGINEERS</div>
+                <div class="instructions-text">
+                    This is the form for Thomas to order things, please take pictures or leave part with name on my desk.
+                </div>
+                <div class="requirements">
+                    You need to fill out <strong class="required-text">required parts*</strong> but you can also fill out <strong class="optional-text">optional parts</strong>
+                </div>
+            </div>
+
             <div class="image-section">
                 <div class="parts-image">
                     <img src="https://i.ibb.co/Pvyg0r8z/20250605-1228-Stylish-Cartoon-Engineer-simple-compose-01jx0nhkw6ehxr7zdc7qbjsnv9.png" alt="Engineering Parts Request">
@@ -317,6 +433,18 @@
                     <label for="partDescription">Part Description *</label>
                     <textarea id="partDescription" name="partDescription" placeholder="Comprehensive description of part, you can leave it in office too if you want me to see it" required></textarea>
                 </div>
+
+                <div class="form-group">
+                    <label for="partPhotos">Part Photos (Optional)</label>
+                    <input type="file" id="partPhotos" name="partPhotos" accept="image/*" multiple>
+                    <div class="file-info">
+                        📷 Upload up to 3 photos (max 1MB each) • JPG, PNG, or HEIC
+                    </div>
+                    <div id="photoPreview" class="photo-preview">
+                        <strong>Photos to send:</strong>
+                        <div id="photoList" class="photo-list"></div>
+                    </div>
+                </div>
                 
                 <div class="form-group">
                     <label for="neededBy">Needed By Date</label>
@@ -343,6 +471,37 @@
         // Initialize EmailJS
         emailjs.init('4bK1N7SOkKNwMkqk0');
 
+        // Photo handling variables
+        let selectedPhotos = [];
+
+        // Image compression function
+        function compressImage(file, maxWidth = 800, quality = 0.8) {
+            return new Promise((resolve) => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                const img = new Image();
+                
+                img.onload = function() {
+                    // Calculate new dimensions
+                    let { width, height } = img;
+                    if (width > maxWidth) {
+                        height = (height * maxWidth) / width;
+                        width = maxWidth;
+                    }
+                    
+                    canvas.width = width;
+                    canvas.height = height;
+                    
+                    // Draw and compress
+                    ctx.drawImage(img, 0, 0, width, height);
+                    const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+                    resolve(compressedDataUrl);
+                };
+                
+                img.src = URL.createObjectURL(file);
+            });
+        }
+
         // Set dates on page load
         document.addEventListener('DOMContentLoaded', function() {
             // Set request date to today
@@ -353,6 +512,64 @@
             const weekFromNow = new Date();
             weekFromNow.setDate(today.getDate() + 7);
             document.getElementById('neededBy').valueAsDate = weekFromNow;
+        });
+
+        // Handle photo selection
+        document.getElementById('partPhotos').addEventListener('change', async function(e) {
+            const files = Array.from(e.target.files);
+            const photoPreview = document.getElementById('photoPreview');
+            const photoList = document.getElementById('photoList');
+            
+            selectedPhotos = []; // Reset
+            photoList.innerHTML = '';
+            
+            if (files.length === 0) {
+                photoPreview.style.display = 'none';
+                return;
+            }
+            
+            // Limit to 3 photos
+            const limitedFiles = files.slice(0, 3);
+            if (files.length > 3) {
+                alert('Only the first 3 photos will be used. Please select up to 3 images.');
+            }
+            
+            for (let i = 0; i < limitedFiles.length; i++) {
+                const file = limitedFiles[i];
+                
+                // Check file size (1MB limit before compression)
+                if (file.size > 1 * 1024 * 1024) {
+                    alert(`Photo "${file.name}" is too large. Please use images under 1MB.`);
+                    continue;
+                }
+                
+                try {
+                    // Compress image
+                    const compressedData = await compressImage(file);
+                    
+                    selectedPhotos.push({
+                        name: file.name,
+                        data: compressedData,
+                        size: (file.size / 1024 / 1024).toFixed(2)
+                    });
+                    
+                    // Add to preview
+                    const photoItem = document.createElement('div');
+                    photoItem.className = 'photo-item';
+                    photoItem.innerHTML = `
+                        <img src="${compressedData}">
+                        <div class="photo-info">${file.name}</div>
+                        <div class="photo-size">${(file.size / 1024 / 1024).toFixed(2)} MB</div>
+                    `;
+                    photoList.appendChild(photoItem);
+                } catch (error) {
+                    console.error('Error processing image:', error);
+                }
+            }
+            
+            if (selectedPhotos.length > 0) {
+                photoPreview.style.display = 'block';
+            }
         });
 
         document.getElementById('partsRequestForm').addEventListener('submit', function(e) {
@@ -370,6 +587,16 @@
             // Show loading state
             submitBtn.textContent = 'Sending...';
             form.classList.add('loading');
+            
+            // Prepare photo data for email
+            let photoSection = '';
+            if (selectedPhotos.length > 0) {
+                photoSection = '\n\n📸 ATTACHED PHOTOS:\n';
+                selectedPhotos.forEach((photo, index) => {
+                    photoSection += `\nPhoto ${index + 1}: ${photo.name} (${photo.size} MB)\n`;
+                });
+                photoSection += '\n[Photos are embedded below in email]\n';
+            }
             
             // Get form data
             const formData = {
@@ -389,7 +616,16 @@ Request Details:
 - Request Date: ${document.getElementById('requestDate').value}
 - Needed By: ${document.getElementById('neededBy').value}
                 
-Full Description: ${document.getElementById('partDescription').value}`
+Full Description: ${document.getElementById('partDescription').value}${photoSection}`,
+                
+                // Add photo data (compressed)
+                photo_count: selectedPhotos.length,
+                photo_1_name: selectedPhotos[0]?.name || '',
+                photo_1_data: selectedPhotos[0]?.data || '',
+                photo_2_name: selectedPhotos[1]?.name || '',
+                photo_2_data: selectedPhotos[1]?.data || '',
+                photo_3_name: selectedPhotos[2]?.name || '',
+                photo_3_data: selectedPhotos[2]?.data || ''
             };
 
             // Send email using EmailJS
@@ -398,6 +634,8 @@ Full Description: ${document.getElementById('partDescription').value}`
                     console.log('SUCCESS!', response.status, response.text);
                     successMsg.style.display = 'block';
                     form.reset();
+                    selectedPhotos = [];
+                    document.getElementById('photoPreview').style.display = 'none';
                     
                     // Reset dates
                     const today = new Date();
@@ -409,6 +647,11 @@ Full Description: ${document.getElementById('partDescription').value}`
                 }, function(error) {
                     console.log('FAILED...', error);
                     errorMsg.style.display = 'block';
+                    
+                    // If error might be due to large photos, suggest alternative
+                    if (selectedPhotos.length > 0) {
+                        errorMsg.innerHTML = '❌ Failed to submit request. Try with smaller images or fewer photos.';
+                    }
                 })
                 .finally(function() {
                     // Reset loading state
@@ -419,6 +662,9 @@ Full Description: ${document.getElementById('partDescription').value}`
 
         // Form reset handler
         document.querySelector('.reset-btn').addEventListener('click', function() {
+            selectedPhotos = [];
+            document.getElementById('photoPreview').style.display = 'none';
+            
             setTimeout(function() {
                 // Reset dates after form clears
                 const today = new Date();
