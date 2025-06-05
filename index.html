@@ -438,7 +438,7 @@
                     <label for="partPhotos">Part Photos (Optional)</label>
                     <input type="file" id="partPhotos" name="partPhotos" accept="image/*" multiple>
                     <div class="file-info">
-                        📷 Upload up to 2 photos (any size - aggressively compressed for email) • JPG, PNG, or HEIC
+                        📷 Upload up to 3 photos (any size) • JPG, PNG, or HEIC • Photos uploaded to cloud hosting
                     </div>
                     <div id="photoPreview" class="photo-preview">
                         <strong>Photos to send:</strong>
@@ -474,61 +474,67 @@
         // Photo handling variables
         let selectedPhotos = [];
 
-        // Advanced image compression function
-        function compressImage(file, targetSizeKB = 400) { // More aggressive - target 400KB
-            return new Promise((resolve) => {
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                const img = new Image();
+        // Photo upload to ImgBB (free image hosting)
+        async function uploadImageToHost(file) {
+            const formData = new FormData();
+            formData.append('image', file);
+            
+            try {
+                // Your ImgBB API key
+                const API_KEY = '022ef8dfdb2e7c58f83dfb6289c36569';
                 
-                img.onload = function() {
-                    let { width, height } = img;
-                    
-                    // Start with smaller dimensions for EmailJS
-                    let maxWidth = 800; // Reduced from 1200
-                    if (width > maxWidth) {
-                        height = (height * maxWidth) / width;
-                        width = maxWidth;
-                    }
-                    
-                    canvas.width = width;
-                    canvas.height = height;
-                    ctx.drawImage(img, 0, 0, width, height);
-                    
-                    // Try different quality levels to hit target size
-                    let quality = 0.8; // Start lower
-                    let compressedDataUrl;
-                    let attempts = 0;
-                    
-                    do {
-                        compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
-                        const sizeKB = (compressedDataUrl.length * 0.75) / 1024; // Estimate base64 size
-                        
-                        if (sizeKB <= targetSizeKB || attempts > 10) {
-                            break;
-                        }
-                        
-                        // More aggressive compression
-                        if (attempts < 6) {
-                            quality -= 0.1; // Reduce quality faster
-                        } else {
-                            // Even more aggressive: resize image
-                            width *= 0.75; // More aggressive resize
-                            height *= 0.75;
-                            canvas.width = width;
-                            canvas.height = height;
-                            ctx.drawImage(img, 0, 0, width, height);
-                            quality = 0.6; // Lower quality
-                        }
-                        
-                        attempts++;
-                    } while (true);
-                    
-                    resolve(compressedDataUrl);
-                };
+                if (API_KEY === 'YOUR_IMGBB_API_KEY') {
+                    // Fallback: Use a free service that doesn't require API key
+                    return await uploadToFreeService(file);
+                }
                 
-                img.src = URL.createObjectURL(file);
-            });
+                const response = await fetch(`https://api.imgbb.com/1/upload?key=${API_KEY}`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    return {
+                        url: result.data.url,
+                        deleteUrl: result.data.delete_url,
+                        size: (file.size / 1024 / 1024).toFixed(2)
+                    };
+                } else {
+                    throw new Error('Upload failed');
+                }
+            } catch (error) {
+                console.error('Image upload error:', error);
+                return null;
+            }
+        }
+        
+        // Fallback upload service (no API key needed)
+        async function uploadToFreeService(file) {
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                // Using 0x0.st (free, no registration needed)
+                const response = await fetch('https://0x0.st', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    const url = await response.text();
+                    return {
+                        url: url.trim(),
+                        size: (file.size / 1024 / 1024).toFixed(2)
+                    };
+                } else {
+                    throw new Error('Upload failed');
+                }
+            } catch (error) {
+                console.error('Fallback upload error:', error);
+                return null;
+            }
         }
 
         // Set dates on page load
@@ -543,7 +549,7 @@
             document.getElementById('neededBy').valueAsDate = weekFromNow;
         });
 
-        // Handle photo selection
+        // Handle photo selection and upload
         document.getElementById('partPhotos').addEventListener('change', async function(e) {
             const files = Array.from(e.target.files);
             const photoPreview = document.getElementById('photoPreview');
@@ -557,74 +563,62 @@
                 return;
             }
             
-            // Limit to 2 photos for better EmailJS reliability
-            const limitedFiles = files.slice(0, 2);
-            if (files.length > 2) {
-                alert('Only the first 2 photos will be used for reliable sending. Please select up to 2 images.');
+            // Limit to 3 photos
+            const limitedFiles = files.slice(0, 3);
+            if (files.length > 3) {
+                alert('Only the first 3 photos will be used. Please select up to 3 images.');
             }
+            
+            photoPreview.style.display = 'block';
             
             for (let i = 0; i < limitedFiles.length; i++) {
                 const file = limitedFiles[i];
                 
-                // Show processing message for large files
-                if (file.size > 5 * 1024 * 1024) {
-                    const processingMsg = document.createElement('div');
-                    processingMsg.innerHTML = `🔄 Compressing "${file.name}"... Please wait.`;
-                    processingMsg.style.cssText = 'padding: 10px; background: #fff3cd; border-radius: 5px; margin: 5px 0; color: #856404;';
-                    photoList.appendChild(processingMsg);
-                }
+                // Show uploading message
+                const uploadingMsg = document.createElement('div');
+                uploadingMsg.className = 'photo-item';
+                uploadingMsg.innerHTML = `
+                    <div style="width: 40px; height: 40px; background: #e2e8f0; border-radius: 4px; margin-right: 10px; display: flex; align-items: center; justify-content: center;">📤</div>
+                    <div class="photo-info">Uploading "${file.name}"...</div>
+                    <div class="photo-size">${(file.size / 1024 / 1024).toFixed(2)} MB</div>
+                `;
+                photoList.appendChild(uploadingMsg);
                 
                 try {
-                    // Compress image (automatically targets ~800KB)
-                    const compressedData = await compressImage(file);
+                    // Upload to image host
+                    const uploadResult = await uploadImageToHost(file);
                     
-                    // Calculate compressed size
-                    const compressedSizeKB = (compressedData.length * 0.75) / 1024;
-                    
-                    selectedPhotos.push({
-                        name: file.name,
-                        data: compressedData,
-                        originalSize: (file.size / 1024 / 1024).toFixed(2),
-                        compressedSize: (compressedSizeKB / 1024).toFixed(2)
-                    });
-                    
-                    // Remove processing message if it exists
-                    const processingMsg = photoList.querySelector('div');
-                    if (processingMsg && processingMsg.innerHTML.includes('Compressing')) {
-                        processingMsg.remove();
+                    if (uploadResult) {
+                        selectedPhotos.push({
+                            name: file.name,
+                            url: uploadResult.url,
+                            size: uploadResult.size
+                        });
+                        
+                        // Update to show success
+                        uploadingMsg.innerHTML = `
+                            <img src="${uploadResult.url}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px; margin-right: 10px;">
+                            <div class="photo-info">${file.name} ✅</div>
+                            <div class="photo-size">${uploadResult.size} MB</div>
+                        `;
+                        uploadingMsg.style.background = '#f0fff4';
+                    } else {
+                        // Show error
+                        uploadingMsg.innerHTML = `
+                            <div style="width: 40px; height: 40px; background: #fed7d7; border-radius: 4px; margin-right: 10px; display: flex; align-items: center; justify-content: center;">❌</div>
+                            <div class="photo-info">${file.name} - Upload failed</div>
+                            <div class="photo-size">Try again</div>
+                        `;
+                        uploadingMsg.style.background = '#fed7d7';
                     }
-                    
-                    // Add to preview
-                    const photoItem = document.createElement('div');
-                    photoItem.className = 'photo-item';
-                    photoItem.innerHTML = `
-                        <img src="${compressedData}">
-                        <div class="photo-info">${file.name}</div>
-                        <div class="photo-size">
-                            ${(file.size / 1024 / 1024).toFixed(2)} MB → ${(compressedSizeKB / 1024).toFixed(2)} MB
-                            ${compressedSizeKB > 400 ? ' ⚠️' : ' ✅'}
-                        </div>
-                    `;
-                    photoList.appendChild(photoItem);
                 } catch (error) {
-                    console.error('Error processing image:', error);
-                    alert(`Failed to process image "${file.name}". Please try a different photo.`);
-                }
-            }
-            
-            if (selectedPhotos.length > 0) {
-                photoPreview.style.display = 'block';
-                
-                // Check total size and warn if needed
-                const totalSizeKB = selectedPhotos.reduce((total, photo) => {
-                    return total + (photo.data.length * 0.75) / 1024;
-                }, 0);
-                
-                if (totalSizeKB > 1500) { // Warn if over 1.5MB total
-                    const warningDiv = document.createElement('div');
-                    warningDiv.innerHTML = `⚠️ Total size: ${(totalSizeKB/1024).toFixed(1)}MB. May be too large for email.`;
-                    warningDiv.style.cssText = 'padding: 10px; background: #fed7d7; color: #c53030; border-radius: 5px; margin: 10px 0; font-weight: 600;';
-                    photoList.appendChild(warningDiv);
+                    console.error('Upload error:', error);
+                    uploadingMsg.innerHTML = `
+                        <div style="width: 40px; height: 40px; background: #fed7d7; border-radius: 4px; margin-right: 10px; display: flex; align-items: center; justify-content: center;">❌</div>
+                        <div class="photo-info">${file.name} - Upload failed</div>
+                        <div class="photo-size">Try again</div>
+                    `;
+                    uploadingMsg.style.background = '#fed7d7';
                 }
             }
         });
@@ -650,9 +644,9 @@
             if (selectedPhotos.length > 0) {
                 photoSection = '\n\n📸 ATTACHED PHOTOS:\n';
                 selectedPhotos.forEach((photo, index) => {
-                    photoSection += `\nPhoto ${index + 1}: ${photo.name} (${photo.originalSize}MB → ${photo.compressedSize}MB)\n`;
+                    photoSection += `\nPhoto ${index + 1}: ${photo.name} (${photo.size}MB)\nLink: ${photo.url}\n`;
                 });
-                photoSection += '\n[Photos are embedded below in email]\n';
+                photoSection += '\n[Click links above to view photos]\n';
             }
             
             // Get form data
@@ -675,12 +669,14 @@ Request Details:
                 
 Full Description: ${document.getElementById('partDescription').value}${photoSection}`,
                 
-                // Add photo data (compressed - limited to 2 photos)
+                // Add photo URLs instead of data
                 photo_count: selectedPhotos.length,
                 photo_1_name: selectedPhotos[0]?.name || '',
-                photo_1_data: selectedPhotos[0]?.data || '',
+                photo_1_url: selectedPhotos[0]?.url || '',
                 photo_2_name: selectedPhotos[1]?.name || '',
-                photo_2_data: selectedPhotos[1]?.data || ''
+                photo_2_url: selectedPhotos[1]?.url || '',
+                photo_3_name: selectedPhotos[2]?.name || '',
+                photo_3_url: selectedPhotos[2]?.url || ''
             };
 
             // Send email using EmailJS
@@ -704,23 +700,12 @@ Full Description: ${document.getElementById('partDescription').value}${photoSect
                     errorMsg.style.display = 'block';
                     
                     // Better error detection
-                    if (error.text && error.text.includes('size')) {
-                        errorMsg.innerHTML = '❌ Email too large. Try with fewer photos or contact Thomas directly.';
-                    } else if (error.status === 422) {
+                    if (error.status === 422) {
                         errorMsg.innerHTML = '❌ Template error. Please contact Thomas directly with your request.';
-                    } else if (selectedPhotos.length > 0) {
-                        // Calculate total payload size
-                        const totalSizeKB = selectedPhotos.reduce((total, photo) => {
-                            return total + (photo.data.length * 0.75) / 1024;
-                        }, 0);
-                        
-                        if (totalSizeKB > 2000) { // If total > 2MB
-                            errorMsg.innerHTML = `❌ Photos too large (${(totalSizeKB/1024).toFixed(1)}MB total). Try with just 1-2 photos.`;
-                        } else {
-                            errorMsg.innerHTML = '❌ Submit failed. Try without photos or contact Thomas directly.';
-                        }
+                    } else if (error.text && error.text.includes('network')) {
+                        errorMsg.innerHTML = '❌ Network error. Check your connection and try again.';
                     } else {
-                        errorMsg.innerHTML = '❌ Submit failed. Please check your connection and try again.';
+                        errorMsg.innerHTML = '❌ Submit failed. Please try again or contact Thomas directly.';
                     }
                 })
                 .finally(function() {
