@@ -639,6 +639,9 @@
             submitBtn.textContent = 'Sending...';
             form.classList.add('loading');
             
+            // Debug: Log photo URLs
+            console.log('Selected photos for email:', selectedPhotos);
+            
             // Prepare photo data for email
             let photoSection = '';
             if (selectedPhotos.length > 0) {
@@ -649,8 +652,8 @@
                 photoSection += '\n[Click links above to view photos]\n';
             }
             
-            // Get form data
-            const formData = {
+            // Build email data with debugging
+            const emailData = {
                 requester_name: document.getElementById('requesterName').value,
                 reason_for_request: document.getElementById('reasonForRequest').value,
                 part_number: document.getElementById('partNumber').value || 'Not specified',
@@ -669,20 +672,23 @@ Request Details:
                 
 Full Description: ${document.getElementById('partDescription').value}${photoSection}`,
                 
-                // Add photo URLs instead of data
+                // Photo URLs - with fallbacks
                 photo_count: selectedPhotos.length,
-                photo_1_name: selectedPhotos[0]?.name || '',
+                photo_1_name: selectedPhotos[0]?.name || 'No photo',
                 photo_1_url: selectedPhotos[0]?.url || '',
-                photo_2_name: selectedPhotos[1]?.name || '',
+                photo_2_name: selectedPhotos[1]?.name || 'No photo',
                 photo_2_url: selectedPhotos[1]?.url || '',
-                photo_3_name: selectedPhotos[2]?.name || '',
+                photo_3_name: selectedPhotos[2]?.name || 'No photo',
                 photo_3_url: selectedPhotos[2]?.url || ''
             };
-
+            
+            // Debug: Log what we're sending to EmailJS
+            console.log('EmailJS data being sent:', emailData);
+            
             // Send email using EmailJS
-            emailjs.send('service_ykbe95b', 'template_hvsxaa5', formData)
+            emailjs.send('service_ykbe95b', 'template_hvsxaa5', emailData)
                 .then(function(response) {
-                    console.log('SUCCESS!', response.status, response.text);
+                    console.log('EmailJS SUCCESS!', response.status, response.text);
                     successMsg.style.display = 'block';
                     form.reset();
                     selectedPhotos = [];
@@ -696,7 +702,7 @@ Full Description: ${document.getElementById('partDescription').value}${photoSect
                     document.getElementById('neededBy').valueAsDate = weekFromNow;
                     
                 }, function(error) {
-                    console.log('FAILED...', error);
+                    console.log('EmailJS FAILED...', error);
                     errorMsg.style.display = 'block';
                     
                     // Better error detection
