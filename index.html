@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parts Request Form</title>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 25%, #4a5568 50%, #2d3748 75%, #1a202c 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #2d3748;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            background: linear-gradient(145deg, #f8fafc 0%, #e2e8f0 100%);
+            border-radius: 20px;
+            box-shadow: 
+                0 25px 50px rgba(0, 0, 0, 0.15),
+                0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4a5568 0%, #2d3748 50%, #1a202c 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.02) 50%, transparent 70%);
+        }
+
+        .header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 15px;
+            font-weight: 300;
+            letter-spacing: -0.02em;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.2rem;
+            font-weight: 300;
+        }
+
+        .form-container {
+            padding: 40px;
+            background: linear-gradient(145deg, #f1f5f9 0%, #e2e8f0 100%);
+        }
+
+        .image-section {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        .parts-image {
+            width: 300px;
+            height: 200px;
+            border-radius: 15px;
+            box-shadow: 
+                0 10px 25px rgba(0, 0, 0, 0.1),
+                0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+            margin: 0 auto;
+            overflow: hidden;
+            transition: all 0.4s ease;
+        }
+
+        .parts-image:hover {
+            transform: translateY(-5px);
+            box-shadow: 
+                0 20px 40px rgba(0, 0, 0, 0.15),
+                0 0 0 1px rgba(255, 255, 255, 0.3) inset;
+        }
+
+        .parts-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="date"],
+        textarea {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #cbd5e0;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: linear-gradient(145deg, #ffffff 0%, #f7fafc 100%);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02) inset;
+            color: #2d3748;
+        }
+
+        input:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #4a5568;
+            box-shadow: 
+                0 0 0 3px rgba(74, 85, 104, 0.1),
+                0 2px 4px rgba(0, 0, 0, 0.02) inset;
+            background: #ffffff;
+        }
+
+        input::placeholder,
+        textarea::placeholder {
+            color: #a0aec0;
+            font-style: italic;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+            font-family: inherit;
+        }
+
+        .submit-section {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #4a5568 0%, #2d3748 50%, #1a202c 100%);
+            color: white;
+            padding: 18px 45px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            box-shadow: 
+                0 8px 20px rgba(74, 85, 104, 0.3),
+                0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 
+                0 12px 30px rgba(74, 85, 104, 0.4),
+                0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+        }
+
+        .submit-btn:active {
+            transform: translateY(-1px);
+        }
+
+        .reset-btn {
+            background: transparent;
+            color: #4a5568;
+            padding: 18px 35px;
+            border: 2px solid #cbd5e0;
+            border-radius: 50px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-left: 15px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .reset-btn:hover {
+            border-color: #4a5568;
+            color: #2d3748;
+            background: rgba(74, 85, 104, 0.05);
+        }
+
+        .loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        .success-message {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: center;
+            font-weight: 600;
+            display: none;
+        }
+
+        .error-message {
+            background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: center;
+            font-weight: 600;
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .parts-image {
+                width: 240px;
+                height: 160px;
+            }
+            
+            .header h1 {
+                font-size: 2.2rem;
+            }
+            
+            .submit-btn, .reset-btn {
+                width: 100%;
+                margin: 10px 0;
+            }
+        }
+
+        /* Subtle animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-group {
+            animation: fadeInUp 0.6s ease forwards;
+        }
+
+        .form-group:nth-child(1) { animation-delay: 0.1s; }
+        .form-group:nth-child(2) { animation-delay: 0.2s; }
+        .form-group:nth-child(3) { animation-delay: 0.3s; }
+        .form-group:nth-child(4) { animation-delay: 0.4s; }
+        .form-group:nth-child(5) { animation-delay: 0.5s; }
+        .form-group:nth-child(6) { animation-delay: 0.6s; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Parts Request Form</h1>
+            <p>Professional Engineering Parts Requisition</p>
+        </div>
+
+        <div class="form-container">
+            <div class="image-section">
+                <div class="parts-image">
+                    <img src="https://i.ibb.co/Pvyg0r8z/20250605-1228-Stylish-Cartoon-Engineer-simple-compose-01jx0nhkw6ehxr7zdc7qbjsnv9.png" alt="Engineering Parts Request">
+                </div>
+            </div>
+
+            <form id="partsRequestForm">
+                <div class="form-group">
+                    <label for="reasonForRequest">Reason for Request / What is the item for? *</label>
+                    <textarea id="reasonForRequest" name="reasonForRequest" placeholder="Describe what this part will be used for and why it's needed..." required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="requesterName">Requester Name *</label>
+                    <input type="text" id="requesterName" name="requesterName" placeholder="Your full name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="partNumber">Part Number</label>
+                    <input type="text" id="partNumber" name="partNumber" placeholder="Part number if known (appreciated but not required)">
+                </div>
+                
+                <div class="form-group">
+                    <label for="requestDate">Request Date</label>
+                    <input type="date" id="requestDate" name="requestDate" readonly>
+                </div>
+                
+                <div class="form-group">
+                    <label for="quantity">Quantity Needed *</label>
+                    <input type="number" id="quantity" name="quantity" min="1" placeholder="Number of parts needed" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="partDescription">Part Description *</label>
+                    <textarea id="partDescription" name="partDescription" placeholder="Comprehensive description of part, you can leave it in office too if you want me to see it" required></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="neededBy">Needed By Date</label>
+                    <input type="date" id="neededBy" name="neededBy">
+                </div>
+
+                <div class="submit-section">
+                    <button type="submit" class="submit-btn">Submit Request</button>
+                    <button type="reset" class="reset-btn">Clear Form</button>
+                </div>
+
+                <div class="success-message" id="successMessage">
+                    ✅ Parts request submitted successfully! Thomas will receive your request shortly.
+                </div>
+
+                <div class="error-message" id="errorMessage">
+                    ❌ Failed to submit request. Please try again or contact Thomas directly.
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Initialize EmailJS
+        emailjs.init('4bK1N7SOkKNwMkqk0');
+
+        // Set dates on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set request date to today
+            const today = new Date();
+            document.getElementById('requestDate').valueAsDate = today;
+            
+            // Set needed by date to a week from now
+            const weekFromNow = new Date();
+            weekFromNow.setDate(today.getDate() + 7);
+            document.getElementById('neededBy').valueAsDate = weekFromNow;
+        });
+
+        document.getElementById('partsRequestForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const form = this;
+            const submitBtn = form.querySelector('.submit-btn');
+            const successMsg = document.getElementById('successMessage');
+            const errorMsg = document.getElementById('errorMessage');
+            
+            // Hide previous messages
+            successMsg.style.display = 'none';
+            errorMsg.style.display = 'none';
+            
+            // Show loading state
+            submitBtn.textContent = 'Sending...';
+            form.classList.add('loading');
+            
+            // Get form data
+            const formData = {
+                requester_name: document.getElementById('requesterName').value,
+                reason_for_request: document.getElementById('reasonForRequest').value,
+                part_number: document.getElementById('partNumber').value || 'Not specified',
+                quantity: document.getElementById('quantity').value,
+                part_description: document.getElementById('partDescription').value,
+                request_date: document.getElementById('requestDate').value,
+                needed_by: document.getElementById('neededBy').value,
+                subject: `New Part Request From ${document.getElementById('requesterName').value}`,
+                email_content: `Subject: ENG/[Put PO Here] Request from: ${document.getElementById('requesterName').value} for a ${document.getElementById('partDescription').value} because ${document.getElementById('reasonForRequest').value}.
+                
+Request Details:
+- Part Number: ${document.getElementById('partNumber').value || 'Not specified'}
+- Quantity: ${document.getElementById('quantity').value}
+- Request Date: ${document.getElementById('requestDate').value}
+- Needed By: ${document.getElementById('neededBy').value}
+                
+Full Description: ${document.getElementById('partDescription').value}`
+            };
+
+            // Send email using EmailJS
+            emailjs.send('service_ykbe95b', 'template_hvsxaa5', formData)
+                .then(function(response) {
+                    console.log('SUCCESS!', response.status, response.text);
+                    successMsg.style.display = 'block';
+                    form.reset();
+                    
+                    // Reset dates
+                    const today = new Date();
+                    document.getElementById('requestDate').valueAsDate = today;
+                    const weekFromNow = new Date();
+                    weekFromNow.setDate(today.getDate() + 7);
+                    document.getElementById('neededBy').valueAsDate = weekFromNow;
+                    
+                }, function(error) {
+                    console.log('FAILED...', error);
+                    errorMsg.style.display = 'block';
+                })
+                .finally(function() {
+                    // Reset loading state
+                    submitBtn.textContent = 'Submit Request';
+                    form.classList.remove('loading');
+                });
+        });
+
+        // Form reset handler
+        document.querySelector('.reset-btn').addEventListener('click', function() {
+            setTimeout(function() {
+                // Reset dates after form clears
+                const today = new Date();
+                document.getElementById('requestDate').valueAsDate = today;
+                const weekFromNow = new Date();
+                weekFromNow.setDate(today.getDate() + 7);
+                document.getElementById('neededBy').valueAsDate = weekFromNow;
+            }, 100);
+        });
+    </script>
+</body>
+</html>
